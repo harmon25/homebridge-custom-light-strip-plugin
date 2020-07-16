@@ -15,9 +15,38 @@ import Bonjour from "bonjour";
 
 const bonjour = Bonjour();
 
-function discover() {
-  const lightStrips = [];
-  bonjour.find({ type: "http" }, (service) => {
+interface Device {
+  type: string;
+  mac: string;
+  serial: string;
+  address: string;
+  hostname: string;
+  uniqueName: string;
+}
+
+interface Referer {
+  address: string;
+  family: string;
+  port: number;
+  size: number;
+}
+
+interface DiscoveredDevice {
+  name: string;
+  fqdn: string;
+  host: string;
+  referer: Referer;
+  port: number;
+  type: string;
+  subtypes: string[];
+  rawTxt: Buffer;
+  txt: Record<string, string>;
+}
+
+function discover(): Promise<Device[]> {
+  const lightStrips: DiscoveredDevice[] = [];
+
+  const browser = bonjour.find({ type: "http" }, (service) => {
     if (service.name.includes("led-strip")) {
       //   console.log("Found a led-strip:", service);
       lightStrips.push(service);
@@ -27,21 +56,21 @@ function discover() {
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
       bonjour.destroy();
-      const discoveredDevices = [];
+      const discoveredDevices: Device[] = [];
       for (let i = 0; i < lightStrips.length; i++) {
         const resp = await axios.get(
           `http://${lightStrips[i].referer.address}`
         );
 
         const [type, mac, serial] = resp.data.split("\n");
-
+        const { referer, host, name } = lightStrips[i];
         discoveredDevices.push({
           type,
           mac,
           serial,
-          address: lightStrips[i].referer.address,
-          hostname: lightStrips[i].host,
-          uniqueName: lightStrips[i].name,
+          hostname: host,
+          uniqueName: name,
+          address: referer.address,
         });
       }
 
@@ -131,10 +160,13 @@ export class LightStripHomebridgePlatform implements DynamicPlatformPlugin {
         new LightStripPlatformAccessory(this, existingAccessory);
       } else {
         // the accessory does not yet exist, so we need to create it
-        this.log.info("Adding new accessory:", device.name);
+        this.log.info("Adding new accessory:", device.uniqueName);
 
         // create a new accessory
-        const accessory = new this.api.platformAccessory(device.name, uuid);
+        const accessory = new this.api.platformAccessory(
+          device.uniqueName,
+          uuid
+        );
 
         // store a copy of the device object in the `accessory.context`
         // the `context` property can be used to store any data about the accessory you may need

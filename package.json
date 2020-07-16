@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "lightstrip-hb-plugin",
+  "displayName": "Homebridge Custom Light Strip Plugin",
+  "name": "homebridge-custom-light-strip-plugin",
   "version": "1.0.0",
-  "description": "Light Strip Plugin",
+  "description": "Custom Light Strip Plugin for Homebridge",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "git://github.com/harmon25/lightstrip-hb.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/harmon25/lightstrip-hb/issues"
   },
   "engines": {
     "node": ">=10.17.0",
@@ -28,8 +28,7 @@
   ],
   "dependencies": {
     "axios": "^0.19.2",
-    "bonjour": "^3.5.0",
-    "multicast-dns": "^7.2.2"
+    "bonjour": "^3.5.0"
   },
   "devDependencies": {
     "@types/node": "^14.0.14",

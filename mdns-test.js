@@ -3,7 +3,7 @@ var axios = require("axios");
 
 function discover() {
   let lightStrips = [];
-  bonjour.find({ type: "http" }, (service) => {
+  const browser = bonjour.find({ type: "http" }, (service) => {
     if (service.name.includes("led-strip")) {
       //   console.log("Found a led-strip:", service);
       lightStrips.push(service);
@@ -12,6 +12,8 @@ function discover() {
 
   return new Promise((resolve, reject) => {
     setTimeout(async () => {
+      console.log(browser.services);
+
       bonjour.destroy();
       let discoveredDevices = [];
       for (let i = 0; i < lightStrips.length; i++) {

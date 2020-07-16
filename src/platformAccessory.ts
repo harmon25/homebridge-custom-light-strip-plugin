@@ -5,7 +5,7 @@ import {
   CharacteristicSetCallback,
   CharacteristicGetCallback,
 } from "homebridge";
-
+import axios from "axios";
 import { LightStripHomebridgePlatform } from "./platform";
 
 /**
@@ -15,7 +15,7 @@ import { LightStripHomebridgePlatform } from "./platform";
  */
 export class LightStripPlatformAccessory {
   private service: Service;
-
+  private baseUrl: string;
   /**
    * These are just used to create a working example
    * You should implement your own code to track the state of your accessory
@@ -32,14 +32,11 @@ export class LightStripPlatformAccessory {
     // set accessory information
     this.accessory
       .getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(
-        this.platform.Characteristic.Manufacturer,
-        "Default-Manufacturer"
-      )
-      .setCharacteristic(this.platform.Characteristic.Model, "Default-Model")
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, "harmon")
+      .setCharacteristic(this.platform.Characteristic.Model, "light-strip")
       .setCharacteristic(
         this.platform.Characteristic.SerialNumber,
-        "Default-Serial"
+        accessory.context.device.serial
       );
 
     // get the LightBulb service if it exists, otherwise create a new LightBulb service
@@ -56,8 +53,10 @@ export class LightStripPlatformAccessory {
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
     this.service.setCharacteristic(
       this.platform.Characteristic.Name,
-      accessory.context.device.exampleDisplayName
+      accessory.context.device.uniqueName
     );
+
+    this.baseUrl = `http://${accessory.context.device.address}`;
 
     // each service must implement at-minimum the "required characteristics" for the given service type
     // see https://developers.homebridge.io/#/service/Lightbulb
@@ -69,9 +68,9 @@ export class LightStripPlatformAccessory {
       .on("get", this.getOn.bind(this)); // GET - bind to the `getOn` method below
 
     // register handlers for the Brightness Characteristic
-    this.service
-      .getCharacteristic(this.platform.Characteristic.Brightness)
-      .on("set", this.setBrightness.bind(this)); // SET - bind to the 'setBrightness` method below
+    // this.service
+    //   .getCharacteristic(this.platform.Characteristic.Brightness)
+    //   .on("set", this.setBrightness.bind(this)); // SET - bind to the 'setBrightness` method below
 
     // EXAMPLE ONLY
     // Example showing how to update the state of a Characteristic asynchronously instead
@@ -79,21 +78,21 @@ export class LightStripPlatformAccessory {
     //
     // Here we change update the brightness to a random value every 5 seconds using
     // the `updateCharacteristic` method.
-    setInterval(() => {
-      // assign the current brightness a random value between 0 and 100
-      const currentBrightness = Math.floor(Math.random() * 100);
+    // setInterval(() => {
+    //   // assign the current brightness a random value between 0 and 100
+    //   const currentBrightness = Math.floor(Math.random() * 100);
 
-      // push the new value to HomeKit
-      this.service.updateCharacteristic(
-        this.platform.Characteristic.Brightness,
-        currentBrightness
-      );
+    //   // push the new value to HomeKit
+    //   this.service.updateCharacteristic(
+    //     this.platform.Characteristic.Brightness,
+    //     currentBrightness
+    //   );
 
-      this.platform.log.debug(
-        "Pushed updated current Brightness state to HomeKit:",
-        currentBrightness
-      );
-    }, 10000);
+    //   this.platform.log.debug(
+    //     "Pushed updated current Brightness state to HomeKit:",
+    //     currentBrightness
+    //   );
+    // }, 10000);
   }
 
   /**
@@ -102,12 +101,16 @@ export class LightStripPlatformAccessory {
    */
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     // implement your own code to turn your device on/off
-    this.exampleStates.On = value as boolean;
+    axios.get(`${this.baseUrl}/power?value=${value ? 1 : 0}`).then(() => {
+      this.platform.log.debug("Set Characteristic On ->", value);
 
-    this.platform.log.debug("Set Characteristic On ->", value);
-
+      // you must call the callback function
+      // the first argument should be null if there were no errors
+      // the second argument should be the value to return
+      callback(null);
+    });
+    // this.exampleStates.On = value as boolean;
     // you must call the callback function
-    callback(null);
   }
 
   /**
@@ -125,30 +128,32 @@ export class LightStripPlatformAccessory {
    */
   getOn(callback: CharacteristicGetCallback) {
     // implement your own code to check if the device is on
-    const isOn = this.exampleStates.On;
+    // const isOn = this.exampleStates.On;
 
-    this.platform.log.debug("Get Characteristic On ->", isOn);
-
-    // you must call the callback function
-    // the first argument should be null if there were no errors
-    // the second argument should be the value to return
-    callback(null, isOn);
+    axios.get(`${this.baseUrl}/power`).then((r) => {
+      const isOn = Boolean(r.data);
+      this.platform.log.debug("Get Characteristic On ->", isOn);
+      // you must call the callback function
+      // the first argument should be null if there were no errors
+      // the second argument should be the value to return
+      callback(null, isOn);
+    });
   }
 
-  /**
-   * Handle "SET" requests from HomeKit
-   * These are sent when the user changes the state of an accessory, for example, changing the Brightness
-   */
-  setBrightness(
-    value: CharacteristicValue,
-    callback: CharacteristicSetCallback
-  ) {
-    // implement your own code to set the brightness
-    this.exampleStates.Brightness = value as number;
+  // /**
+  //  * Handle "SET" requests from HomeKit
+  //  * These are sent when the user changes the state of an accessory, for example, changing the Brightness
+  //  */
+  // setBrightness(
+  //   value: CharacteristicValue,
+  //   callback: CharacteristicSetCallback
+  // ) {
+  //   // implement your own code to set the brightness
+  //   this.exampleStates.Brightness = value as number;
 
-    this.platform.log.debug("Set Characteristic Brightness -> ", value);
+  //   this.platform.log.debug("Set Characteristic Brightness -> ", value);
 
-    // you must call the callback function
-    callback(null);
-  }
+  //   // you must call the callback function
+  //   callback(null);
+  // }
 }
