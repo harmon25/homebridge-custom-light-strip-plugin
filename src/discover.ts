@@ -33,14 +33,13 @@ export function discover(): Promise<Device[]> {
   const bonjour = Bonjour();
   const lightStrips: DiscoveredDevice[] = [];
 
-  const browser = bonjour.find({ type: "http" }, (service) => {
+  bonjour.find({ type: "http" }, (service) => {
     if (service.name.includes("led-strip")) {
-      console.log("Found a led-strip:", service);
       lightStrips.push(service);
     }
   });
 
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     setTimeout(async () => {
       bonjour.destroy();
       const discoveredDevices: Device[] = [];

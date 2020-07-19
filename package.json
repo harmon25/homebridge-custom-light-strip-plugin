@@ -29,7 +29,8 @@
   "dependencies": {
     "axios": "^0.19.2",
     "bonjour": "^3.5.0",
-    "color-convert": "^2.0.1"
+    "color-convert": "^2.0.1",
+    "query-string": "^6.13.1"
   },
   "devDependencies": {
     "@types/node": "^14.0.23",
