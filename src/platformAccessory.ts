@@ -28,7 +28,6 @@ export class LightStripPlatformAccessory {
   private service: Service;
   private baseUrl: string;
   private switches: Service[] = [];
-  private maxBrightness = 220;
   // this could be tweaked to alter available patterns
   private ACTIVE_PATTERNS = [
     "Breath",
@@ -40,11 +39,9 @@ export class LightStripPlatformAccessory {
     "Rainbow",
   ];
 
-  /**
-   * These are just used to create a working example
-   * You should implement your own code to track the state of your accessory
-   */
-  private HSL = { H: 0, S: 0, L: 50 };
+  private hue: CharacteristicValue = 0;
+  private saturation: CharacteristicValue = 0;
+  private brightnessValue: CharacteristicValue = 0;
 
   constructor(
     private readonly platform: LightStripHomebridgePlatform,
@@ -177,23 +174,28 @@ export class LightStripPlatformAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback
   ) {
-    // need to calculate brightness relative to the min/max exposed by the light strip, maybe this should be a % on the lightstrip side.
-    const newVal = Math.round(0.01 * Number(value) * this.maxBrightness);
-    this.doPost("/brightness", { value: newVal }).then(() => {
+    this.brightnessValue = value;
+
+    this.doPost("/solidcolorhsv", {
+      h: this.hue,
+      s: this.saturation,
+      v: this.brightnessValue,
+    }).then(() => {
       callback(null);
     });
   }
 
   getBrightness(callback: CharacteristicSetCallback) {
     this.doGet("/settings").then(({ data }) => {
-      const brightness: number = (data.brightness / 220) * 100;
-      callback(null, brightness);
+      const { r, g, b } = data.solid_color;
+      const [_H, _S, L] = convert.rgb.hsl(r, g, b);
+      this.brightnessValue = L;
+      callback(null, this.brightnessValue);
     });
   }
 
   setHue(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    const [r, g, b] = convert.hsl.rgb(value, this.HSL.S, this.HSL.L);
-    this.doPost("/solidcolor", { r, g, b }).then(() => {
+    this.doPost("/solidcolorh", { h: value }).then(() => {
       callback(null);
     });
   }
@@ -202,9 +204,9 @@ export class LightStripPlatformAccessory {
     this.doGet("/settings").then(({ data }) => {
       const { r, g, b } = data.solid_color;
       const [H, S, L] = convert.rgb.hsl(r, g, b);
-      this.HSL.H = H;
-      this.HSL.S = S;
-      this.HSL.L = L;
+      this.hue = H;
+      this.saturation = S;
+      this.brightnessValue = L;
       // this.platform.log.debug("Get Characteristic Hue -> ", H);
       callback(null, H);
     });
@@ -214,8 +216,12 @@ export class LightStripPlatformAccessory {
     value: CharacteristicValue,
     callback: CharacteristicSetCallback
   ) {
-    const [r, g, b] = convert.hsl.rgb(this.HSL.H, value, this.HSL.L);
-    this.doPost("/solidcolor", { r, g, b }).then(() => {
+    this.saturation = value;
+    this.doPost("/solidcolorhsv", {
+      h: this.hue,
+      s: this.saturation,
+      v: this.brightnessValue,
+    }).then(() => {
       callback(null);
     });
   }
@@ -223,10 +229,8 @@ export class LightStripPlatformAccessory {
   getSaturation(callback: CharacteristicSetCallback) {
     this.doGet("/settings").then(({ data }) => {
       const { r, g, b } = data.solid_color;
-      const [H, S, L] = convert.rgb.hsl(r, g, b);
-      this.HSL.H = H;
-      this.HSL.S = S;
-      this.HSL.L = L;
+      const [_H, S] = convert.rgb.hsl(r, g, b);
+
       callback(null, S);
     });
   }
