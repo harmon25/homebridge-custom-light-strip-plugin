@@ -1,5 +1,5 @@
 {
-  "private": true,
+  "private": false,
   "displayName": "Homebridge Custom Light Strip Plugin",
   "name": "homebridge-custom-light-strip-plugin",
   "version": "1.0.1-beta.0",
