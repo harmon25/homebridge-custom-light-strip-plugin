@@ -145,21 +145,23 @@ export class LightStripPlatformAccessory {
         // actually send the request to change pattern
         this.doPost("/patterns", { value: PATTERNS[name] }).then(() => {
           callback(null);
-        });
+        }).catch(callback);
       } else {
         // if turning off a switch, set pattern back to solid color.
         this.doPost("/patterns", { value: 0 }).then(() => {
           callback(null);
-        });
+        }).catch(callback);
       }
     };
   };
 
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
+    this.platform.log.info("Setting ON: ", value);
+
     this.doGet(`/power?value=${value ? 1 : 0}`).then(() => {
       // this.platform.log.debug("Set Characteristic On ->", value);
       callback(null);
-    });
+    }).catch(callback);
   }
 
   getOn(callback: CharacteristicGetCallback) {
@@ -167,7 +169,7 @@ export class LightStripPlatformAccessory {
       const isOn = Boolean(r.data.power);
       // this.platform.log.debug("Get Characteristic On ->", isOn);
       callback(null, isOn);
-    });
+    }).catch(callback);
   }
 
   setBrightness(
@@ -175,6 +177,7 @@ export class LightStripPlatformAccessory {
     callback: CharacteristicSetCallback
   ) {
     this.brightnessValue = value;
+    this.platform.log.info("Setting Hue: ", this.brightnessValue);
 
     this.doPost("/solidcolorhsv", {
       h: this.hue,
@@ -182,7 +185,7 @@ export class LightStripPlatformAccessory {
       v: this.brightnessValue,
     }).then(() => {
       callback(null);
-    });
+    }).catch(callback);
   }
 
   getBrightness(callback: CharacteristicSetCallback) {
@@ -191,13 +194,15 @@ export class LightStripPlatformAccessory {
       const [_H, _S, L] = convert.rgb.hsl(r, g, b);
       this.brightnessValue = L;
       callback(null, this.brightnessValue);
-    });
+    }).catch(callback);
   }
 
   setHue(value: CharacteristicValue, callback: CharacteristicSetCallback) {
-    this.doPost("/solidcolorh", { h: value }).then(() => {
+    this.hue = value;
+    this.platform.log.info("Setting Hue: ", this.hue);
+    this.doPost("/solidcolorhsv", { h: this.hue, s: this.saturation, v: this.brightnessValue }).then(() => {
       callback(null);
-    });
+    }).catch(callback);
   }
 
   getHue(callback: CharacteristicSetCallback) {
@@ -209,7 +214,7 @@ export class LightStripPlatformAccessory {
       this.brightnessValue = L;
       // this.platform.log.debug("Get Characteristic Hue -> ", H);
       callback(null, H);
-    });
+    }).catch(callback);
   }
 
   setSaturation(
@@ -223,7 +228,7 @@ export class LightStripPlatformAccessory {
       v: this.brightnessValue,
     }).then(() => {
       callback(null);
-    });
+    }).catch(callback);
   }
 
   getSaturation(callback: CharacteristicSetCallback) {
@@ -232,14 +237,14 @@ export class LightStripPlatformAccessory {
       const [_H, S] = convert.rgb.hsl(r, g, b);
 
       callback(null, S);
-    });
+    }).catch(callback);
   }
 
-  doPost(path, body) {
+  doPost(path: string, body: Record<string, unknown>) {
     return axios.post(`${this.baseUrl}${path}`, queryString.stringify(body));
   }
 
-  doGet(path) {
+  doGet(path: string) {
     return axios.get(`${this.baseUrl}${path}`);
   }
 }
