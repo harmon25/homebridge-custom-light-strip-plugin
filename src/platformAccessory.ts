@@ -124,7 +124,7 @@ export class LightStripPlatformAccessory {
     return (callback: CharacteristicSetCallback) => {
       this.doGet("/settings").then(({ data }) => {
         callback(null, PATTERNS[name] === data.pattern_idx);
-      });
+      }).catch(callback);
     };
   };
 
