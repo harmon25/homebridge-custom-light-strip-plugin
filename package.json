@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Homebridge Custom Light Strip Plugin",
   "name": "homebridge-custom-light-strip-plugin",
-  "version": "1.0.6",
+  "version": "2.0.0-beta",
   "description": "Custom Light Strip Plugin for Homebridge",
   "license": "Apache-2.0",
   "repository": {
