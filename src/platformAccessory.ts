@@ -5,14 +5,12 @@ import {
   CharacteristicValue,
   CharacteristicSetCallback,
   CharacteristicGetCallback,
-  // Characteristic,
 } from "homebridge";
 import type { LightStripHomebridgePlatform } from "./platform";
 
 import axios from "axios";
 import queryString from "query-string";
 import convert from "color-convert";
-
 // there are more patterns!
 const PATTERNS = {
   Solid: 0,
@@ -43,6 +41,7 @@ export class LightStripPlatformAccessory {
   private hue: CharacteristicValue = 0;
   private saturation: CharacteristicValue = 0;
   private brightnessValue: CharacteristicValue = 0;
+  private displayName: string;
 
   constructor(
     private readonly platform: LightStripHomebridgePlatform,
@@ -50,6 +49,7 @@ export class LightStripPlatformAccessory {
   ) {
     // url used to control light strip
     this.baseUrl = `http://${accessory.context.device.address}`;
+    this.displayName = accessory.context.device.uniqueName;
 
     // set accessory information
     this.accessory
@@ -66,7 +66,14 @@ export class LightStripPlatformAccessory {
       this.accessory.getService(this.platform.Service.Lightbulb) ||
       this.accessory.addService(this.platform.Service.Lightbulb);
 
-    // this.service.addCharacteristic(StripMode, 0);
+    (
+      this.service.getCharacteristic(
+        this.platform.Characteristic.LightStripMode
+      ) ||
+      this.service.addCharacteristic(
+        this.platform.Characteristic.LightStripMode
+      )
+    ).onGet(this.getMode.bind(this));
 
     this.service.setCharacteristic(
       this.platform.Characteristic.Name,
@@ -163,6 +170,17 @@ export class LightStripPlatformAccessory {
       }
     };
   };
+
+  async getMode(): Promise<CharacteristicValue> {
+    const mode: number = 0;
+
+    this.platform.log.debug(
+      `[${this.displayName}] Get Characteristic mode ->`,
+      mode
+    );
+
+    return mode;
+  }
 
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.info("Setting ON: ", value);
@@ -277,21 +295,3 @@ export class LightStripPlatformAccessory {
     return axios.get(`${this.baseUrl}${path}`);
   }
 }
-
-// let Characteristic, Formats, Perms;
-
-// class StripMode extends Characteristic {
-//   constructor() {
-//     super("StripMode", StripMode.UUID);
-//     this.setProps({
-//       format: Formats.UINT32,
-//       maxValue: 10,
-//       minValue: 0,
-//       minStep: 1,
-//       perms: [Perms.READ, Perms.WRITE, Perms.NOTIFY],
-//     });
-//     this.value = this.getDefaultValue();
-//   }
-// }
-
-// StripMode.UUID = "b484384e-98f7-4f29-911e-42e4cbb87df2"; // random

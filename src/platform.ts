@@ -12,6 +12,10 @@ import { LightStripPlatformAccessory } from "./platformAccessory";
 
 import { PLATFORM_NAME, PLUGIN_NAME } from "./settings";
 
+import customStripMode = require("./customStripMode");
+
+let ILightStripMode;
+
 import { discover } from "./discover";
 /**
  * HomebridgePlatform
@@ -20,11 +24,12 @@ import { discover } from "./discover";
  */
 export class LightStripHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap
-    .Characteristic;
+  public Characteristic: typeof Characteristic & typeof ILightStripMode;
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
+
+  private LightStripMode;
 
   constructor(
     public readonly log: Logger,
@@ -32,7 +37,8 @@ export class LightStripHomebridgePlatform implements DynamicPlatformPlugin {
     public readonly api: API
   ) {
     this.log.debug("Finished initializing platform:", this.config.name);
-
+    this.LightStripMode = customStripMode(this.api);
+    ILightStripMode = this.LightStripMode;
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
     // Dynamic Platform plugins should only register new accessories after this event was fired,
     // in order to ensure they weren't added to homebridge already. This event can also be used
@@ -42,6 +48,9 @@ export class LightStripHomebridgePlatform implements DynamicPlatformPlugin {
       // run the method to discover / register your devices as accessories
       this.discoverDevices();
     });
+
+    this.Characteristic = Object.defineProperty(this.api.hap.Characteristic, 'LightStripMode', {value: this.LightStripMode});
+
   }
 
   /**
