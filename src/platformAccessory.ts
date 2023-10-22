@@ -207,7 +207,7 @@ export class LightStripPlatformAccessory {
     this.doGet("/settings")
       .then(({ data }) => {
         const { r, g, b } = data.solid_color;
-        const [_H, _S, L] = convert.rgb.hsl(r, g, b);
+        const [, , L] = convert.rgb.hsl(r, g, b);
         this.brightnessValue = L;
         callback(null, this.brightnessValue);
       })
@@ -262,7 +262,7 @@ export class LightStripPlatformAccessory {
     this.doGet("/settings")
       .then(({ data }) => {
         const { r, g, b } = data.solid_color;
-        const [_H, S] = convert.rgb.hsl(r, g, b);
+        const [, S] = convert.rgb.hsl(r, g, b);
 
         callback(null, S);
       })
