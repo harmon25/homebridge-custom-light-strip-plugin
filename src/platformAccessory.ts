@@ -5,6 +5,7 @@ import {
   CharacteristicValue,
   CharacteristicSetCallback,
   CharacteristicGetCallback,
+  // Characteristic,
 } from "homebridge";
 import type { LightStripHomebridgePlatform } from "./platform";
 
@@ -65,6 +66,8 @@ export class LightStripPlatformAccessory {
       this.accessory.getService(this.platform.Service.Lightbulb) ||
       this.accessory.addService(this.platform.Service.Lightbulb);
 
+    // this.service.addCharacteristic(StripMode, 0);
+
     this.service.setCharacteristic(
       this.platform.Characteristic.Name,
       accessory.context.device.uniqueName
@@ -122,9 +125,11 @@ export class LightStripPlatformAccessory {
 
   handleSwitchGet = (name) => {
     return (callback: CharacteristicSetCallback) => {
-      this.doGet("/settings").then(({ data }) => {
-        callback(null, PATTERNS[name] === data.pattern_idx);
-      }).catch(callback);
+      this.doGet("/settings")
+        .then(({ data }) => {
+          callback(null, PATTERNS[name] === data.pattern_idx);
+        })
+        .catch(callback);
     };
   };
 
@@ -143,14 +148,18 @@ export class LightStripPlatformAccessory {
           });
 
         // actually send the request to change pattern
-        this.doPost("/patterns", { value: PATTERNS[name] }).then(() => {
-          callback(null);
-        }).catch(callback);
+        this.doPost("/patterns", { value: PATTERNS[name] })
+          .then(() => {
+            callback(null);
+          })
+          .catch(callback);
       } else {
         // if turning off a switch, set pattern back to solid color.
-        this.doPost("/patterns", { value: 0 }).then(() => {
-          callback(null);
-        }).catch(callback);
+        this.doPost("/patterns", { value: 0 })
+          .then(() => {
+            callback(null);
+          })
+          .catch(callback);
       }
     };
   };
@@ -158,18 +167,22 @@ export class LightStripPlatformAccessory {
   setOn(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.platform.log.info("Setting ON: ", value);
 
-    this.doGet(`/power?value=${value ? 1 : 0}`).then(() => {
-      // this.platform.log.debug("Set Characteristic On ->", value);
-      callback(null);
-    }).catch(callback);
+    this.doGet(`/power?value=${value ? 1 : 0}`)
+      .then(() => {
+        // this.platform.log.debug("Set Characteristic On ->", value);
+        callback(null);
+      })
+      .catch(callback);
   }
 
   getOn(callback: CharacteristicGetCallback) {
-    this.doGet("/power").then((r) => {
-      const isOn = Boolean(r.data.power);
-      // this.platform.log.debug("Get Characteristic On ->", isOn);
-      callback(null, isOn);
-    }).catch(callback);
+    this.doGet("/power")
+      .then((r) => {
+        const isOn = Boolean(r.data.power);
+        // this.platform.log.debug("Get Characteristic On ->", isOn);
+        callback(null, isOn);
+      })
+      .catch(callback);
   }
 
   setBrightness(
@@ -183,38 +196,50 @@ export class LightStripPlatformAccessory {
       h: this.hue,
       s: this.saturation,
       v: this.brightnessValue,
-    }).then(() => {
-      callback(null);
-    }).catch(callback);
+    })
+      .then(() => {
+        callback(null);
+      })
+      .catch(callback);
   }
 
   getBrightness(callback: CharacteristicSetCallback) {
-    this.doGet("/settings").then(({ data }) => {
-      const { r, g, b } = data.solid_color;
-      const [_H, _S, L] = convert.rgb.hsl(r, g, b);
-      this.brightnessValue = L;
-      callback(null, this.brightnessValue);
-    }).catch(callback);
+    this.doGet("/settings")
+      .then(({ data }) => {
+        const { r, g, b } = data.solid_color;
+        const [_H, _S, L] = convert.rgb.hsl(r, g, b);
+        this.brightnessValue = L;
+        callback(null, this.brightnessValue);
+      })
+      .catch(callback);
   }
 
   setHue(value: CharacteristicValue, callback: CharacteristicSetCallback) {
     this.hue = value;
     this.platform.log.info("Setting Hue: ", this.hue);
-    this.doPost("/solidcolorhsv", { h: this.hue, s: this.saturation, v: this.brightnessValue }).then(() => {
-      callback(null);
-    }).catch(callback);
+    this.doPost("/solidcolorhsv", {
+      h: this.hue,
+      s: this.saturation,
+      v: this.brightnessValue,
+    })
+      .then(() => {
+        callback(null);
+      })
+      .catch(callback);
   }
 
   getHue(callback: CharacteristicSetCallback) {
-    this.doGet("/settings").then(({ data }) => {
-      const { r, g, b } = data.solid_color;
-      const [H, S, L] = convert.rgb.hsl(r, g, b);
-      this.hue = H;
-      this.saturation = S;
-      this.brightnessValue = L;
-      // this.platform.log.debug("Get Characteristic Hue -> ", H);
-      callback(null, H);
-    }).catch(callback);
+    this.doGet("/settings")
+      .then(({ data }) => {
+        const { r, g, b } = data.solid_color;
+        const [H, S, L] = convert.rgb.hsl(r, g, b);
+        this.hue = H;
+        this.saturation = S;
+        this.brightnessValue = L;
+        // this.platform.log.debug("Get Characteristic Hue -> ", H);
+        callback(null, H);
+      })
+      .catch(callback);
   }
 
   setSaturation(
@@ -226,18 +251,22 @@ export class LightStripPlatformAccessory {
       h: this.hue,
       s: this.saturation,
       v: this.brightnessValue,
-    }).then(() => {
-      callback(null);
-    }).catch(callback);
+    })
+      .then(() => {
+        callback(null);
+      })
+      .catch(callback);
   }
 
   getSaturation(callback: CharacteristicSetCallback) {
-    this.doGet("/settings").then(({ data }) => {
-      const { r, g, b } = data.solid_color;
-      const [_H, S] = convert.rgb.hsl(r, g, b);
+    this.doGet("/settings")
+      .then(({ data }) => {
+        const { r, g, b } = data.solid_color;
+        const [_H, S] = convert.rgb.hsl(r, g, b);
 
-      callback(null, S);
-    }).catch(callback);
+        callback(null, S);
+      })
+      .catch(callback);
   }
 
   doPost(path: string, body: Record<string, unknown>) {
@@ -248,3 +277,21 @@ export class LightStripPlatformAccessory {
     return axios.get(`${this.baseUrl}${path}`);
   }
 }
+
+// let Characteristic, Formats, Perms;
+
+// class StripMode extends Characteristic {
+//   constructor() {
+//     super("StripMode", StripMode.UUID);
+//     this.setProps({
+//       format: Formats.UINT32,
+//       maxValue: 10,
+//       minValue: 0,
+//       minStep: 1,
+//       perms: [Perms.READ, Perms.WRITE, Perms.NOTIFY],
+//     });
+//     this.value = this.getDefaultValue();
+//   }
+// }
+
+// StripMode.UUID = "b484384e-98f7-4f29-911e-42e4cbb87df2"; // random
