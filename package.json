@@ -2,7 +2,7 @@
   "private": false,
   "displayName": "Homebridge Custom Light Strip Plugin",
   "name": "homebridge-custom-light-strip-plugin",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Custom Light Strip Plugin for Homebridge",
   "license": "Apache-2.0",
   "repository": {
@@ -13,8 +13,8 @@
     "url": "https://github.com/harmon25/homebridge-custom-light-strip-plugin/issues"
   },
   "engines": {
-    "node": ">=16.0.0",
-    "homebridge": ">0.4.53"
+    "node": "^18.17.0",
+    "homebridge": "^1.6.0"
   },
   "main": "dist/index.js",
   "scripts": {
@@ -33,14 +33,14 @@
     "query-string": "^8.1.0"
   },
   "devDependencies": {
-    "@types/node": "^14.18.63",
-    "@typescript-eslint/eslint-plugin": "^6.8.0",
-    "@typescript-eslint/parser": "^6.8.0",
+    "@types/node": "^18.16.20",
+    "@typescript-eslint/eslint-plugin": "^5.62.0",
+    "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.52.0",
-    "homebridge": "^1.3.4",
+    "homebridge": "^1.6.0",
     "nodemon": "^3.0.1",
     "rimraf": "^5.0.2",
     "ts-node": "^10.9.0",
-    "typescript": "^5.2.2"
+    "typescript": "^4.9.5"
   }
 }
