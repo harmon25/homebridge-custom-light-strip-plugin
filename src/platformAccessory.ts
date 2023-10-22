@@ -172,7 +172,7 @@ export class LightStripPlatformAccessory {
   };
 
   async getMode(): Promise<CharacteristicValue> {
-    const mode: number = 0;
+    const mode = 0;
 
     this.platform.log.debug(
       `[${this.displayName}] Get Characteristic mode ->`,
